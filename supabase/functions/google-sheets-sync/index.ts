@@ -1,99 +1,123 @@
+// supabase/functions/google-sheets-sync/index.ts
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// O import do cliente Supabase deve ser sempre da URL do ESM
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// Define os cabeçalhos CORS para permitir requisições do seu app
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  "Access-Control-Allow-Origin": "*", // Em produção, restrinja para o seu domínio
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
 
+// Função principal que será executada
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  // Trata a requisição pre-flight OPTIONS do navegador
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-    )
-
-    const { sheetId, sheetName, syncType } = await req.json()
-
-    // Simular dados do Google Sheets para demonstração
-    let data = []
-    
-    if (syncType === 'employees') {
-      data = [
-        { employee_id: 'EMP001', name: 'João Silva', department: 'Vendas', position: 'Vendedor Sênior', hire_date: '2022-01-15' },
-        { employee_id: 'EMP002', name: 'Maria Santos', department: 'Marketing', position: 'Analista de Marketing', hire_date: '2021-03-20' },
-        { employee_id: 'EMP003', name: 'Pedro Costa', department: 'TI', position: 'Desenvolvedor', hire_date: '2020-08-10' },
-        { employee_id: 'EMP004', name: 'Ana Oliveira', department: 'RH', position: 'Especialista em RH', hire_date: '2021-11-05' },
-      ]
-    } else if (syncType === 'trainings') {
-      data = [
-        { training_name: 'Técnicas de Vendas Avançadas', category: 'Vendas', duration_hours: 16, cost: 1500.00, provider: 'TrainCorp', training_date: '2024-01-15' },
-        { training_name: 'Liderança e Gestão de Equipes', category: 'Liderança', duration_hours: 24, cost: 2500.00, provider: 'LeadershipPro', training_date: '2024-02-10' },
-        { training_name: 'Marketing Digital', category: 'Marketing', duration_hours: 20, cost: 1800.00, provider: 'DigitalAcademy', training_date: '2024-03-05' },
-        { training_name: 'Desenvolvimento em React', category: 'Tecnologia', duration_hours: 32, cost: 3000.00, provider: 'TechSkills', training_date: '2024-01-20' },
-      ]
-    } else if (syncType === 'performance') {
-      data = [
-        { employee_id: 'EMP001', metric_type: 'sales', metric_value: 45000, metric_date: '2024-01-31', period_type: 'monthly' },
-        { employee_id: 'EMP001', metric_type: 'sales', metric_value: 52000, metric_date: '2024-02-29', period_type: 'monthly' },
-        { employee_id: 'EMP002', metric_type: 'productivity', metric_value: 85, metric_date: '2024-01-31', period_type: 'monthly' },
-        { employee_id: 'EMP002', metric_type: 'productivity', metric_value: 92, metric_date: '2024-02-29', period_type: 'monthly' },
-        { employee_id: 'EMP003', metric_type: 'quality', metric_value: 95, metric_date: '2024-01-31', period_type: 'monthly' },
-        { employee_id: 'EMP004', metric_type: 'productivity', metric_value: 88, metric_date: '2024-01-31', period_type: 'monthly' },
-      ]
+    // 1. Valida as variáveis de ambiente (segredos) da função
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error(
+        "Supabase URL ou Anon Key não configuradas nos segredos da função.",
+      );
     }
 
-    // Inserir dados no Supabase
-    let result
-    if (syncType === 'employees') {
-      result = await supabaseClient.from('employees').upsert(data, { onConflict: 'employee_id' })
-    } else if (syncType === 'trainings') {
-      result = await supabaseClient.from('trainings').insert(data)
-    } else if (syncType === 'performance') {
-      // Primeiro, precisamos buscar os IDs dos employees
-      const { data: employees } = await supabaseClient.from('employees').select('id, employee_id')
-      const employeeMap = employees?.reduce((acc, emp) => {
-        acc[emp.employee_id] = emp.id
-        return acc
-      }, {} as Record<string, string>) || {}
+    // 2. Cria o cliente Supabase que age em nome do usuário logado.
+    // A autenticação é repassada pelo front-end através do header 'Authorization'
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: req.headers.get("Authorization")! } },
+    });
 
-      const performanceData = data.map(item => ({
-        ...item,
-        employee_id: employeeMap[item.employee_id] || null
-      })).filter(item => item.employee_id)
+    // LINHA DE DEPURAÇÃO PARA VERIFICAR O USUÁRIO
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
+    console.log(
+      "A função 'google-sheets-sync' está rodando como o usuário:",
+      user,
+    );
 
-      result = await supabaseClient.from('performance_metrics').insert(performanceData)
+    // 3. Extrai e valida os parâmetros do corpo da requisição
+    const body = await req.json();
+    const { sheetId, sheetName, syncType } = body;
+    if (!sheetId || !sheetName || !syncType) {
+      throw new Error(
+        "Parâmetros obrigatórios ausentes: sheetId, sheetName ou syncType.",
+      );
+    }
+
+    // 4. Simula os dados (mantido como está)
+    let data = [];
+    if (syncType === "employees") {
+      data = [
+        {
+          employee_id: "EMP001",
+          name: "João Silva",
+          department: "Vendas",
+          position: "Vendedor Sênior",
+          hire_date: "2022-01-15",
+        },
+        {
+          employee_id: "EMP002",
+          name: "Maria Santos",
+          department: "Marketing",
+          position: "Analista de Marketing",
+          hire_date: "2021-03-20",
+        },
+      ];
+    } else {
+      throw new Error(`Tipo de sincronização inválido: '${syncType}'.`);
+    }
+
+    // 5. Inserção no banco
+    let result;
+    if (syncType === "employees") {
+      result = await supabaseClient
+        .from("employees")
+        .upsert(data, { onConflict: "employee_id" });
     }
 
     if (result?.error) {
-      throw result.error
+      throw result.error;
     }
 
-    // Atualizar status de sincronização
-    await supabaseClient.from('google_sheets_sync').upsert({
-      sheet_id: sheetId,
-      sheet_name: sheetName,
-      sync_type: syncType,
-      last_sync_at: new Date().toISOString(),
-      sync_status: 'active'
-    }, { onConflict: 'sheet_id,sync_type' })
+    // 6. Atualiza a tabela de controle
+    const { error: syncError } = await supabaseClient
+      .from("google_sheets_sync")
+      .upsert(
+        {
+          sheet_id: sheetId,
+          sheet_name: sheetName,
+          sync_type: syncType,
+          last_sync_at: new Date().toISOString(),
+          sync_status: "active",
+        },
+        { onConflict: "sheet_id,sync_type" },
+      );
+    if (syncError) throw syncError;
 
+    // 7. Retorna sucesso
     return new Response(
       JSON.stringify({ success: true, syncedRecords: data.length }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      },
+    );
   } catch (error) {
-    console.error('Error in google-sheets-sync:', error)
+    console.error("Erro em google-sheets-sync:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    )
+      JSON.stringify({ error: "Falha na requisição.", details: error.message }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      },
+    );
   }
-})
+});

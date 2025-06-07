@@ -1,0 +1,17 @@
+# Este é o seu arquivo .replit completo e correto
+
+modules = ["nodejs-20", "web"]
+run = "npm run dev"
+
+[nix]
+channel = "stable-24_05"
+
+[headers]
+Content-Security-Policy = "default-src 'self' replit.com *.replit.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' replit.com *.replit.com; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self';"
+
+[[ports]]
+localPort = 3001
+externalPort = 80
+
+[[ports]]
+localPort = 5000
