@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Sheet, Sync } from 'lucide-react';
+import { Loader2, Sheet, RefreshCw } from 'lucide-react';
 import { useGoogleSheetsSync } from '@/hooks/useGoogleSheetsSync';
 
 export const GoogleSheetsIntegration = () => {
@@ -72,7 +72,7 @@ export const GoogleSheetsIntegration = () => {
           {isLoading ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
           ) : (
-            <Sync className="w-4 h-4 mr-2" />
+            <RefreshCw className="w-4 h-4 mr-2" />
           )}
           Sincronizar Dados
         </Button>
