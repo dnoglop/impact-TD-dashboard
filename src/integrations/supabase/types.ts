@@ -9,7 +9,265 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      ai_insights: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          description: string | null
+          id: string
+          impact_score: number | null
+          insight_type: string
+          related_employee_ids: string[] | null
+          related_training_ids: string[] | null
+          title: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          impact_score?: number | null
+          insight_type: string
+          related_employee_ids?: string[] | null
+          related_training_ids?: string[] | null
+          title: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          impact_score?: number | null
+          insight_type?: string
+          related_employee_ids?: string[] | null
+          related_training_ids?: string[] | null
+          title?: string
+        }
+        Relationships: []
+      }
+      employee_trainings: {
+        Row: {
+          completion_date: string | null
+          created_at: string
+          employee_id: string | null
+          feedback: string | null
+          id: string
+          score: number | null
+          training_id: string | null
+        }
+        Insert: {
+          completion_date?: string | null
+          created_at?: string
+          employee_id?: string | null
+          feedback?: string | null
+          id?: string
+          score?: number | null
+          training_id?: string | null
+        }
+        Update: {
+          completion_date?: string | null
+          created_at?: string
+          employee_id?: string | null
+          feedback?: string | null
+          id?: string
+          score?: number | null
+          training_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_trainings_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_trainings_training_id_fkey"
+            columns: ["training_id"]
+            isOneToOne: false
+            referencedRelation: "trainings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          created_at: string
+          department: string | null
+          employee_id: string
+          hire_date: string | null
+          id: string
+          name: string
+          position: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          employee_id: string
+          hire_date?: string | null
+          id?: string
+          name: string
+          position?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          employee_id?: string
+          hire_date?: string | null
+          id?: string
+          name?: string
+          position?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      google_sheets_sync: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          last_sync_at: string | null
+          sheet_id: string
+          sheet_name: string | null
+          sync_status: string | null
+          sync_type: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_sync_at?: string | null
+          sheet_id: string
+          sheet_name?: string | null
+          sync_status?: string | null
+          sync_type: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_sync_at?: string | null
+          sheet_id?: string
+          sheet_name?: string | null
+          sync_status?: string | null
+          sync_type?: string
+        }
+        Relationships: []
+      }
+      performance_metrics: {
+        Row: {
+          created_at: string
+          employee_id: string | null
+          id: string
+          metric_date: string | null
+          metric_type: string
+          metric_value: number | null
+          period_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          employee_id?: string | null
+          id?: string
+          metric_date?: string | null
+          metric_type: string
+          metric_value?: number | null
+          period_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string | null
+          id?: string
+          metric_date?: string | null
+          metric_type?: string
+          metric_value?: number | null
+          period_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_metrics_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roi_calculations: {
+        Row: {
+          calculated_at: string
+          calculation_period_months: number | null
+          id: string
+          investment_amount: number | null
+          return_amount: number | null
+          roi_percentage: number | null
+          training_id: string | null
+        }
+        Insert: {
+          calculated_at?: string
+          calculation_period_months?: number | null
+          id?: string
+          investment_amount?: number | null
+          return_amount?: number | null
+          roi_percentage?: number | null
+          training_id?: string | null
+        }
+        Update: {
+          calculated_at?: string
+          calculation_period_months?: number | null
+          id?: string
+          investment_amount?: number | null
+          return_amount?: number | null
+          roi_percentage?: number | null
+          training_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roi_calculations_training_id_fkey"
+            columns: ["training_id"]
+            isOneToOne: false
+            referencedRelation: "trainings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trainings: {
+        Row: {
+          category: string | null
+          cost: number | null
+          created_at: string
+          duration_hours: number | null
+          id: string
+          provider: string | null
+          training_date: string | null
+          training_name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          cost?: number | null
+          created_at?: string
+          duration_hours?: number | null
+          id?: string
+          provider?: string | null
+          training_date?: string | null
+          training_name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          cost?: number | null
+          created_at?: string
+          duration_hours?: number | null
+          id?: string
+          provider?: string | null
+          training_date?: string | null
+          training_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

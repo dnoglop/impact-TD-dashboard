@@ -4,8 +4,8 @@ import {
   LayoutDashboard, 
   Calendar, 
   Settings, 
-  Search,
-  Plus
+  BarChart3,
+  Brain
 } from "lucide-react";
 
 interface SidebarProps {
@@ -16,9 +16,9 @@ interface SidebarProps {
 export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "appointments", label: "Appointments", icon: Calendar },
-    { id: "analytics", label: "Analytics", icon: Search },
-    { id: "settings", label: "Settings", icon: Settings },
+    { id: "appointments", label: "Treinamentos", icon: Calendar },
+    { id: "analytics", label: "Analytics & IA", icon: BarChart3 },
+    { id: "settings", label: "Integrações", icon: Settings },
   ];
 
   return (
@@ -27,9 +27,9 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
       <div className="p-6 border-b border-gray-700">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">T&D</span>
+            <Brain className="w-5 h-5 text-white" />
           </div>
-          <span className="text-xl font-semibold">UGstudy</span>
+          <span className="text-xl font-semibold">T&D Tracker</span>
         </div>
       </div>
 
@@ -53,15 +53,18 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
           ))}
         </div>
 
-        {/* Quick Actions */}
+        {/* Performance Score */}
         <div className="mt-8 pt-6 border-t border-gray-700">
           <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
-            Quick Actions
+            Score T&D Atual
           </h3>
-          <button className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
-            <Plus className="w-5 h-5" />
-            <span className="font-medium">New Course</span>
-          </button>
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-4">
+            <div className="text-2xl font-bold text-white">87</div>
+            <div className="text-xs text-blue-100">Impacto T&D (0-100)</div>
+            <div className="mt-2 bg-white/20 rounded-full h-2">
+              <div className="bg-white rounded-full h-2 w-[87%]"></div>
+            </div>
+          </div>
         </div>
       </nav>
 
@@ -69,11 +72,11 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
       <div className="p-4 border-t border-gray-700">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <span className="text-white font-semibold text-sm">OS</span>
+            <span className="text-white font-semibold text-sm">AD</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">Owen Santos</p>
-            <p className="text-xs text-gray-400 truncate">Admin</p>
+            <p className="text-sm font-medium text-white truncate">Admin T&D</p>
+            <p className="text-xs text-gray-400 truncate">Gestor de Treinamento</p>
           </div>
         </div>
       </div>
